@@ -18,7 +18,7 @@ import {
 export default function App() {
   const [activeTab, setActiveTab] = useState('tickets');
   const [tickets, setTickets] = useState(initialTickets);
-  const [selectedTicket, setSelectedTicket] = useState(initialTickets[0]);
+  const [selectedTicket, setSelectedTicket] = useState(initialTickets[0] || null);
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [knowledgeArticles, setKnowledgeArticles] = useState(initialKnowledgeBase);
