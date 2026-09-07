@@ -1,0 +1,6 @@
+@AICustomerSupport.Backend_HostAddress = http://localhost:5257
+
+GET {{AICustomerSupport.Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
