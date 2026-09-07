@@ -1,0 +1,24 @@
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# .NET / Backend
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
