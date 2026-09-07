@@ -1,4 +1,7 @@
 using System.Text;
+using AICustomerSupport.Backend.AI.Interfaces;
+using AICustomerSupport.Backend.AI.Retrieval;
+using AICustomerSupport.Backend.AI.Services;
 using AICustomerSupport.Backend.Data;
 using AICustomerSupport.Backend.Helpers;
 using AICustomerSupport.Backend.Middleware;
@@ -61,6 +64,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Dependency Injection - Helpers & Services
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
@@ -68,6 +72,8 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IKnowledgeRetriever, KnowledgeRetriever>();
+builder.Services.AddScoped<IAIService, AIService>();
 
 // CORS Setup (for frontend communication)
 builder.Services.AddCors(options =>

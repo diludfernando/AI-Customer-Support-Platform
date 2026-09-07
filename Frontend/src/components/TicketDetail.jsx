@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Send, 
   Sparkles, 
@@ -10,15 +10,29 @@ import {
   Zap, 
   Flame, 
   ShieldAlert,
-  ThumbsUp,
-  CornerDownLeft,
-  Copy,
-  Edit3
+  Edit3,
+  RefreshCw,
+  Tag
 } from 'lucide-react';
+import { 
+  summarizeTicketWithAi, 
+  getAiSuggestedResponse, 
+  classifyTicketWithAi 
+} from '../services/aiService.js';
 
 export default function TicketDetail({ ticket, onSendMessage, onResolveTicket }) {
   const [replyText, setReplyText] = useState('');
-  const [isAiDraftActive, setIsAiDraftActive] = useState(true);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [aiClassification, setAiClassification] = useState(null);
+  const [loadingAi, setLoadingAi] = useState(false);
+
+  useEffect(() => {
+    // Reset AI state when ticket changes
+    setAiSummary(null);
+    setAiSuggestion(null);
+    setAiClassification(null);
+  }, [ticket?.id]);
 
   if (!ticket) {
     return (
@@ -28,8 +42,50 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
     );
   }
 
+  const handleFetchAiSummary = async () => {
+    setLoadingAi(true);
+    try {
+      const result = await summarizeTicketWithAi(ticket.id, ticket.subject, ticket.messages || []);
+      setAiSummary(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
+  const handleFetchAiSuggestion = async () => {
+    setLoadingAi(true);
+    try {
+      const lastCustMsg = ticket.messages?.slice().reverse().find(m => m.sender === 'customer')?.text || ticket.subject;
+      const result = await getAiSuggestedResponse(ticket.id, lastCustMsg, ticket.category);
+      setAiSuggestion(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
+  const handleAutoClassify = async () => {
+    setLoadingAi(true);
+    try {
+      const firstMsg = ticket.messages?.[0]?.text || ticket.summary || ticket.subject;
+      const result = await classifyTicketWithAi(ticket.subject, firstMsg);
+      setAiClassification(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
   const handleApplyAiDraft = () => {
-    setReplyText(ticket.aiSuggestedReply || '');
+    if (aiSuggestion?.suggestedReply) {
+      setReplyText(aiSuggestion.suggestedReply);
+    } else if (ticket.aiSuggestedReply) {
+      setReplyText(ticket.aiSuggestedReply);
+    }
   };
 
   const handleSend = (e) => {
@@ -38,6 +94,12 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
     onSendMessage(ticket.id, replyText, 'agent');
     setReplyText('');
   };
+
+  const currentCategory = aiClassification?.category || ticket.category;
+  const currentSummary = aiSummary?.summary || ticket.summary;
+  const currentIntent = aiSummary?.customerIntent || ticket.intent;
+  const suggestedReplyText = aiSuggestion?.suggestedReply || ticket.aiSuggestedReply;
+  const confidenceVal = aiSuggestion?.confidenceScore || ticket.aiConfidence || 0.88;
 
   return (
     <div className="flex-1 bg-slate-950 flex flex-col h-full min-w-0 overflow-hidden">
@@ -54,8 +116,9 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
               <h2 className="text-base font-bold text-slate-100 truncate">
                 {ticket.subject}
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
-                {ticket.category}
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0 flex items-center gap-1">
+                <Tag className="w-2.5 h-2.5" />
+                {currentCategory}
               </span>
             </div>
             <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
@@ -70,6 +133,26 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
 
         {/* Action controls */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={handleAutoClassify}
+            disabled={loadingAi}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+            title="Run AI Auto-Classification"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            Classify
+          </button>
+
+          <button
+            onClick={handleFetchAiSummary}
+            disabled={loadingAi}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all"
+            title="Generate AI Summary"
+          >
+            <Bot className="w-3.5 h-3.5 text-indigo-400" />
+            Summarize
+          </button>
+
           <button
             onClick={() => onResolveTicket(ticket.id)}
             className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/20"
@@ -89,26 +172,39 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
             {/* AI Summary Banner */}
             <div className="bg-slate-900/80 border border-indigo-500/20 rounded-xl p-4 flex items-start gap-3 shadow-inner">
               <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 shrink-0 mt-0.5">
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-amber-400" />
               </div>
               <div className="flex-1 text-xs">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-indigo-300">AI Ticket Insight & Intent</span>
                   <span className="text-[11px] font-mono text-slate-400">
-                    Intent: <strong className="text-slate-200">{ticket.intent}</strong>
+                    Intent: <strong className="text-slate-200">{currentIntent}</strong>
                   </span>
                 </div>
-                <p className="text-slate-300 leading-relaxed mb-2">{ticket.summary}</p>
-                <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-2 border-t border-slate-800">
-                  <span>Sentiment: <strong className="text-amber-400">{ticket.sentiment}</strong></span>
-                  <span>Confidence: <strong className="text-emerald-400">{(ticket.aiConfidence * 100).toFixed(0)}%</strong></span>
+                <p className="text-slate-300 leading-relaxed mb-2">{currentSummary}</p>
+
+                {aiSummary?.keyTakeaways && (
+                  <div className="mt-2 pt-2 border-t border-slate-800 space-y-1">
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Key Takeaways:</span>
+                    {aiSummary.keyTakeaways.map((k, i) => (
+                      <p key={i} className="text-[11px] text-slate-300 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                        {k}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-2 border-t border-slate-800 mt-2">
+                  <span>Sentiment: <strong className="text-amber-400">{ticket.sentiment || 'Neutral'}</strong></span>
+                  <span>Confidence: <strong className="text-emerald-400">{Math.round(confidenceVal * 100)}%</strong></span>
                   <span>Assigned: <strong className="text-slate-300">{ticket.assignedTo}</strong></span>
                 </div>
               </div>
             </div>
 
             {/* Message History */}
-            {ticket.messages.map((msg) => {
+            {ticket.messages?.map((msg) => {
               const isCustomer = msg.sender === 'customer';
               const isAi = msg.sender === 'ai';
               return (
@@ -150,7 +246,7 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
           </div>
 
           {/* AI Smart Reply Suggestion Box */}
-          {ticket.aiSuggestedReply && (
+          {(suggestedReplyText || aiSuggestion) && (
             <div className="mx-6 mb-3 p-3 bg-gradient-to-r from-indigo-950/60 to-slate-900 border border-indigo-500/30 rounded-xl flex items-center justify-between gap-4">
               <div className="flex items-start gap-2.5 min-w-0">
                 <div className="p-1.5 rounded-md bg-indigo-500/20 text-indigo-400 shrink-0 mt-0.5">
@@ -158,24 +254,34 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-indigo-300">AI Suggested Smart Response</span>
+                    <span className="text-xs font-bold text-indigo-300">AI Grounded Response Suggestion</span>
                     <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                      {(ticket.aiConfidence * 100).toFixed(0)}% Match
+                      {Math.round(confidenceVal * 100)}% Match
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 truncate mt-0.5">
-                    "{ticket.aiSuggestedReply}"
+                    "{suggestedReplyText}"
                   </p>
                 </div>
               </div>
 
-              <button
-                onClick={handleApplyAiDraft}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1 shadow-md shadow-indigo-600/20 transition-all"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                Insert Draft
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleFetchAiSuggestion}
+                  disabled={loadingAi}
+                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs"
+                  title="Regenerate Suggestion"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingAi ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={handleApplyAiDraft}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1 shadow-md shadow-indigo-600/20 transition-all"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Insert Draft
+                </button>
+              </div>
             </div>
           )}
 
@@ -206,19 +312,25 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
               <BookOpen className="w-4 h-4 text-indigo-400" /> Grounded KB Context
             </h3>
             <p className="text-[11px] text-slate-400 mb-3">
-              Articles automatically retrieved by the RAG vector index for this ticket:
+              Articles retrieved by RAG hybrid index for this ticket:
             </p>
 
             <div className="space-y-2">
-              {ticket.suggestedArticles?.map((art) => (
-                <div key={art.id} className="p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/60 hover:border-indigo-500/50 cursor-pointer transition-colors group">
+              {(aiSuggestion?.relevantKnowledge?.length > 0
+                ? aiSuggestion.relevantKnowledge
+                : ticket.suggestedArticles || []
+              ).map((art, idx) => (
+                <div key={idx} className="p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/60 hover:border-indigo-500/50 cursor-pointer transition-colors group">
                   <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                    <span className="font-mono font-medium text-indigo-400">{art.id}</span>
+                    <span className="font-mono font-medium text-indigo-400">{art.docCode || art.id}</span>
                     <ArrowUpRight className="w-3 h-3 text-slate-500 group-hover:text-indigo-300" />
                   </div>
                   <h4 className="text-xs font-medium text-slate-200 group-hover:text-indigo-200 line-clamp-2">
                     {art.title}
                   </h4>
+                  {art.snippet && (
+                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-2">{art.snippet}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -235,11 +347,11 @@ export default function TicketDetail({ ticket, onSendMessage, onResolveTicket })
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Member Since</span>
-                <span className="text-slate-300">{ticket.customer.joinedDate}</span>
+                <span className="text-slate-300">{ticket.customer.joinedDate || '2024'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Risk Score</span>
-                <span className="font-bold text-emerald-400">Low (0.12)</span>
+                <span className="text-slate-400">AI Confidence</span>
+                <span className="font-bold text-emerald-400">{Math.round(confidenceVal * 100)}%</span>
               </div>
             </div>
           </div>
