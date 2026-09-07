@@ -1,4 +1,9 @@
 using System.Text;
+using AICustomerSupport.Backend.AI.Embeddings;
+using AICustomerSupport.Backend.AI.Implementations;
+using AICustomerSupport.Backend.AI.Interfaces;
+using AICustomerSupport.Backend.AI.RAG;
+using AICustomerSupport.Backend.AI.Retrieval;
 using AICustomerSupport.Backend.Data;
 using AICustomerSupport.Backend.Helpers;
 using AICustomerSupport.Backend.Middleware;
@@ -61,6 +66,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Dependency Injection - Helpers & Services
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
@@ -68,6 +74,15 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+// AI & RAG Pipeline Services
+builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
+builder.Services.AddScoped<IBm25SearchService, Bm25SearchService>();
+builder.Services.AddScoped<IVectorSearchService, VectorSearchService>();
+builder.Services.AddScoped<IRrfFusionService, RrfFusionService>();
+builder.Services.AddScoped<IRagService, RagService>();
+builder.Services.AddScoped<AIService>();
+builder.Services.AddScoped<IAIService>(sp => sp.GetRequiredService<AIService>());
 
 // CORS Setup (for frontend communication)
 builder.Services.AddCors(options =>
@@ -107,11 +122,14 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Seed Database
+// Seed Database & Index RAG Chunks
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await DbSeeder.SeedAsync(context);
+
+    var ragService = scope.ServiceProvider.GetRequiredService<IRagService>();
+    await ragService.EnsureChunksIndexedAsync();
 }
 
 // Middleware Pipeline
