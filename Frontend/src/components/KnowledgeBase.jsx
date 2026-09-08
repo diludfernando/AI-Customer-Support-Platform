@@ -114,50 +114,60 @@ export default function KnowledgeBase({ articles, onAddArticle }) {
       </div>
 
       {/* Articles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-        {filteredArticles.map((art) => (
-          <div
-            key={art.id}
-            className="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/40 rounded-xl p-5 transition-all flex flex-col justify-between group shadow-sm hover:shadow-indigo-500/5"
-          >
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-xs font-mono font-bold text-indigo-400">{art.id}</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> {art.status}
-                </span>
-              </div>
-
-              <h3 className="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors mb-2">
-                {art.title}
-              </h3>
-
-              <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 mb-4">
-                {art.snippet}
-              </p>
-            </div>
-
-            <div>
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {art.tags.map((tag) => (
-                  <span key={tag} className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 flex items-center gap-1">
-                    <Tag className="w-2.5 h-2.5 text-indigo-400" /> {tag}
+      {filteredArticles.length === 0 ? (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center text-slate-400 space-y-3">
+          <BookOpen className="w-8 h-8 text-slate-600 mx-auto" />
+          <p className="text-sm font-semibold text-slate-300">No Knowledge Base Articles Found</p>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Click "Add Knowledge Article" above to create and index your first documentation article for AI retrieval.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          {filteredArticles.map((art) => (
+            <div
+              key={art.id}
+              className="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/40 rounded-xl p-5 transition-all flex flex-col justify-between group shadow-sm hover:shadow-indigo-500/5"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-xs font-mono font-bold text-indigo-400">{art.id}</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> {art.status}
                   </span>
-                ))}
+                </div>
+
+                <h3 className="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors mb-2">
+                  {art.title}
+                </h3>
+
+                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 mb-4">
+                  {art.snippet}
+                </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-slate-500" /> Updated {art.updatedAt}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3 text-slate-500" /> {art.views} views
-                </span>
+              <div>
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {art.tags.map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 flex items-center gap-1">
+                      <Tag className="w-2.5 h-2.5 text-indigo-400" /> {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-500" /> Updated {art.updatedAt}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3 h-3 text-slate-500" /> {art.views} views
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal for adding article */}
       {isModalOpen && (

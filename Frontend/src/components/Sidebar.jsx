@@ -8,10 +8,12 @@ import {
   Bot, 
   Sparkles, 
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, openTicketsCount }) {
+export default function Sidebar({ activeTab, setActiveTab, openTicketsCount, currentUser, onSignOut }) {
   const navItems = [
     { id: 'tickets', label: 'Ticket Workspace', icon: Inbox, count: openTicketsCount },
     { id: 'kb', label: 'AI Knowledge Base', icon: BookOpen },
@@ -19,6 +21,13 @@ export default function Sidebar({ activeTab, setActiveTab, openTicketsCount }) {
     { id: 'simulator', label: 'Customer Widget Demo', icon: MessageSquare },
     { id: 'settings', label: 'AI Bot Settings', icon: Settings },
   ];
+
+  const getInitials = (name) => {
+    if (!name) return 'US';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 h-screen sticky top-0">
@@ -83,17 +92,36 @@ export default function Sidebar({ activeTab, setActiveTab, openTicketsCount }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 px-1 pt-1">
-          <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-300">
-            AM
+        {currentUser ? (
+          <div className="flex items-center justify-between px-1 pt-1">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-300 shrink-0">
+                {getInitials(currentUser.fullName)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-200 truncate">{currentUser.fullName}</p>
+                <p className="text-[10px] text-slate-400 truncate flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-sky-400 shrink-0" /> {currentUser.role || 'User'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onSignOut}
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-200 truncate">Alex Miller</p>
-            <p className="text-[10px] text-slate-400 truncate flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-sky-400" /> Support Lead
-            </p>
-          </div>
-        </div>
+        ) : (
+          <button
+            onClick={() => setActiveTab('auth')}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-bold transition-all"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Sign In / Register</span>
+          </button>
+        )}
       </div>
     </aside>
   );

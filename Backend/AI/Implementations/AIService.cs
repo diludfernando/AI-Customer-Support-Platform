@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AICustomerSupport.Backend.AI.DTOs;
 using AICustomerSupport.Backend.AI.Interfaces;
 using AICustomerSupport.Backend.AI.Prompts;
 using AICustomerSupport.Backend.AI.RAG;
@@ -224,6 +225,73 @@ public class AIService : IAIService
                 Snippet = r.Chunk.ChunkText
             }).ToList()
         };
+    }
+
+    public async Task<AIChatResponseDto> ProcessChatAsync(AIChatRequestDto request)
+    {
+        var chatRes = await ChatAsync(new ChatRequestDto { Message = request.Prompt, CustomerId = request.CustomerId, TicketId = request.TicketId });
+        return new AIChatResponseDto
+        {
+            Response = chatRes.Response,
+            ConfidenceScore = chatRes.ConfidenceScore,
+            EscalatedToHuman = chatRes.EscalatedToHuman,
+            SuggestedCategory = chatRes.Intent,
+            Citations = chatRes.SuggestedArticles.Select(a => new KnowledgeCitationDto { DocCode = a.Id, Title = a.Title, Snippet = a.Snippet }).ToList()
+        };
+    }
+
+    public async Task<AIClassifyResponseDto> ClassifyTicketAsync(AIClassifyRequestDto request)
+    {
+        var res = await ClassifyAsync(new ClassifyRequestDto { Subject = request.Subject, Message = request.Description });
+        return new AIClassifyResponseDto
+        {
+            Category = res.Category,
+            Priority = res.Priority.ToString(),
+            ConfidenceScore = res.ConfidenceScore,
+            Reasoning = $"Classified as {res.Category} with intent {res.Intent}."
+        };
+    }
+
+    public async Task<AISummarizeResponseDto> SummarizeConversationAsync(AISummarizeRequestDto request)
+    {
+        if (request.TicketId.HasValue)
+        {
+            var res = await SummarizeAsync(new SummarizeRequestDto { TicketId = request.TicketId.Value });
+            return new AISummarizeResponseDto { Summary = res.Summary, KeyTakeaways = res.KeyPoints };
+        }
+        return new AISummarizeResponseDto { Summary = "Summary unavailable.", KeyTakeaways = new List<string>() };
+    }
+
+    public async Task<AISuggestionResponseDto> GenerateAgentSuggestionAsync(AISuggestionRequestDto request)
+    {
+        var res = await SuggestReplyAsync(new SuggestReplyRequestDto { TicketId = request.TicketId });
+        return new AISuggestionResponseDto
+        {
+            SuggestedReply = res.SuggestedReply,
+            ConfidenceScore = res.ConfidenceScore,
+            RelevantKnowledge = res.RelevantArticles.Select(a => new KnowledgeCitationDto { DocCode = a.Id, Title = a.Title, Snippet = a.Snippet }).ToList()
+        };
+    }
+
+    public async Task<List<AIInteractionLogDto>> GetInteractionLogsAsync(int limit = 50)
+    {
+        var logs = await _context.AIInteractions
+            .AsNoTracking()
+            .OrderByDescending(i => i.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+
+        return logs.Select(i => new AIInteractionLogDto
+        {
+            Id = i.Id,
+            TicketId = i.TicketId,
+            CustomerId = i.CustomerId,
+            Prompt = i.Prompt,
+            AIResponse = i.AIResponse,
+            ConfidenceScore = i.ConfidenceScore,
+            EscalatedToHuman = i.EscalatedToHuman,
+            CreatedAt = i.CreatedAt
+        }).ToList();
     }
 
     private static string GenerateFallbackResponse(string prompt, string? context)

@@ -74,6 +74,8 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IKnowledgeService, KnowledgeService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IKnowledgeRetriever, KnowledgeRetriever>();
+builder.Services.AddScoped<IAIService, AIService>();
 
 // AI & RAG Pipeline Services
 builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();

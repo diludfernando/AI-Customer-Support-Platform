@@ -3,11 +3,11 @@
 > [!IMPORTANT]
 > **MANDATORY FOR ALL DEVELOPERS AND AI CODING ASSISTANTS**
 >
-> BEFORE writing or modifying any code in this repository, you **MUST** read and adhere to the primary directive documents below:
->
-> 1. 🧠 [**Project Context & Architectural Rules**](.agent/brain/PROJECT_CONTEXT.md) — Covers system architecture, tech stack (React + ASP.NET Core + PostgreSQL), backend/frontend structure, database entities, security requirements, RAG architecture, AI escalation logic, and development guidelines.
-> 2. 🎨 [**UI Design System & Token Specs**](.agent/brain/Desing.md) — Defines the complete visual design system, CSS design tokens, color palette (Indigo primary, Violet/Cyan AI accents), typography scale, layout structures, card/button specs, and design DOs and DONTs.
-> 3. 📝 [**AI Usage Logging Requirements**](docs/ai-usage/README.md) — Details the mandatory logging format and academic integrity rules required for all AI-assisted coding sessions.
+> 1. **BEFORE writing code OR making any GitHub push**: You **MUST** read this [README.md](README.md) and verify adherence to all project rules.
+> 2. **BEFORE implementing features**: Read the primary directive documents below:
+>    - 🧠 [**Project Context & Architectural Rules**](.agent/brain/PROJECT_CONTEXT.md) — Covers system architecture, tech stack (React + ASP.NET Core + PostgreSQL), backend/frontend structure, database entities, security requirements, RAG architecture, AI escalation logic, and development guidelines.
+>    - 🎨 [**UI Design System & Token Specs**](.agent/brain/Desing.md) — Defines the complete visual design system, CSS design tokens, color palette (Indigo primary, Violet/Cyan AI accents), typography scale, layout structures, card/button specs, and design DOs and DONTs.
+>    - 📝 [**AI Usage Logging Requirements**](docs/ai-usage/README.md) — Details the mandatory logging format and academic integrity rules required for all AI-assisted coding sessions.
 
 ---
 
@@ -37,6 +37,17 @@ The **AI Customer Support Platform** is a full-stack customer service applicatio
 
 ---
 
+## 🌿 Git Branching & Push Workflow
+
+> [!CAUTION]
+> **STRICT BRANCH PUSH RULES**
+>
+> 1. ⚛️ **Frontend Folder**: Any changes within the `Frontend/` folder MUST be pushed to the **`Frontend`** branch (`git push origin Frontend`).
+> 2. ⚙️ **Backend Folder**: Any changes within the `Backend/` folder MUST be pushed to the **`backend`** branch (`git push origin backend`).
+> 3. 🤖 **Pre-Push Check**: Before **EVERY** GitHub push, the AI assistant **MUST** read and re-verify compliance against this [README.md](README.md).
+
+---
+
 ## 📁 Repository Structure
 
 ```text
@@ -48,8 +59,8 @@ AI-Customer-Support-Platform/
 ├── docs/
 │   └── ai-usage/
 │       └── README.md           <-- Mandatory AI Usage Log Rules
-├── Backend/                    <-- ASP.NET Core Web API
-├── Frontend/                   <-- React Application
+├── Backend/                    <-- ASP.NET Core Web API (Pushes to `backend` branch)
+├── Frontend/                   <-- React Application (Pushes to `Frontend` branch)
 └── README.md                   <-- Root Documentation & Entry Point
 ```
 
@@ -57,7 +68,9 @@ AI-Customer-Support-Platform/
 
 ## 🚨 Guidelines for AI Coding Assistants & Developers
 
-1. **Check Context Files First**: Always consult [PROJECT_CONTEXT.md](.agent/brain/PROJECT_CONTEXT.md) and [Desing.md](.agent/brain/Desing.md) before implementing features or UI components.
-2. **Follow Design Tokens**: UI components must strictly use the design tokens defined in `Desing.md` (e.g., `#4F46E5` primary indigo, `#F8FAFC` background, soft neutral card styling).
-3. **Keep Architecture Clean**: Maintain service/controller separation in ASP.NET Core and centralized API service calls in React.
-4. **Log AI Usage**: Record all AI-assisted work according to [docs/ai-usage/README.md](docs/ai-usage/README.md).
+1. **Read README Before Push**: Always read [README.md](README.md) before performing any `git push` operation to ensure branch rules are honored.
+2. **Check Context Files First**: Always consult [PROJECT_CONTEXT.md](.agent/brain/PROJECT_CONTEXT.md) and [Desing.md](.agent/brain/Desing.md) before implementing features or UI components.
+3. **Follow Branching Rules**: Push `Frontend/` changes to `Frontend` branch and `Backend/` changes to `backend` branch.
+4. **Follow Design Tokens**: UI components must strictly use the design tokens defined in `Desing.md` (e.g., `#4F46E5` primary indigo, `#F8FAFC` background, soft neutral card styling).
+5. **Keep Architecture Clean**: Maintain service/controller separation in ASP.NET Core and centralized API service calls in React.
+6. **Log AI Usage**: Record all AI-assisted work according to [docs/ai-usage/README.md](docs/ai-usage/README.md).
