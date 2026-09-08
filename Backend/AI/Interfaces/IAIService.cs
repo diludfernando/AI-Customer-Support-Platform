@@ -1,21 +1,15 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using AICustomerSupport.Backend.AI.DTOs;
+using AICustomerSupport.Backend.DTOs.AI;
 
 namespace AICustomerSupport.Backend.AI.Interfaces;
 
-/// <summary>
-/// Service contract for AI Chatbot, RAG groundings, Ticket Auto-Classification,
-/// Conversation Summarization, Agent Suggestions, and Interaction Audit Logging.
-/// </summary>
 public interface IAIService
 {
     Task<string> GenerateResponseAsync(string prompt, string? context);
     Task<double> EvaluateConfidenceAsync(string prompt, string response);
 
-    Task<AIChatResponseDto> ProcessChatAsync(AIChatRequestDto request);
-    Task<AIClassifyResponseDto> ClassifyTicketAsync(AIClassifyRequestDto request);
-    Task<AISummarizeResponseDto> SummarizeConversationAsync(AISummarizeRequestDto request);
-    Task<AISuggestionResponseDto> GenerateAgentSuggestionAsync(AISuggestionRequestDto request);
-    Task<List<AIInteractionLogDto>> GetInteractionLogsAsync(int limit = 50);
+    Task<ChatResponseDto> ChatAsync(ChatRequestDto request);
+    Task<ClassifyResponseDto> ClassifyAsync(ClassifyRequestDto request);
+    Task<SummarizeResponseDto> SummarizeAsync(SummarizeRequestDto request);
+    Task<SuggestReplyResponseDto> SuggestReplyAsync(SuggestReplyRequestDto request);
 }

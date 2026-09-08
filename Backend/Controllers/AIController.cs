@@ -1,8 +1,6 @@
-using System;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using AICustomerSupport.Backend.AI.DTOs;
-using AICustomerSupport.Backend.AI.Interfaces;
+using AICustomerSupport.Backend.AI.Implementations;
+using AICustomerSupport.Backend.DTOs.AI;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AICustomerSupport.Backend.Controllers;
@@ -11,76 +9,43 @@ namespace AICustomerSupport.Backend.Controllers;
 [Route("api/[controller]")]
 public class AIController : ControllerBase
 {
-    private readonly IAIService _aiService;
+    private readonly AIService _aiService;
 
-    public AIController(IAIService aiService)
+    public AIController(AIService aiService)
     {
         _aiService = aiService;
     }
 
-    /// <summary>
-    /// AI Chatbot endpoint for customer interactive assistance (RAG Grounded).
-    /// </summary>
     [HttpPost("chat")]
-    public async Task<IActionResult> ProcessChat([FromBody] AIChatRequestDto dto)
+    public async Task<IActionResult> Chat([FromBody] ChatRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(dto.Prompt))
+        if (string.IsNullOrWhiteSpace(request.Message))
         {
-            return BadRequest(new { message = "Prompt cannot be empty." });
+            return BadRequest(new { message = "Message content is required." });
         }
 
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (!dto.CustomerId.HasValue && !string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var parsedId))
-        {
-            dto.CustomerId = parsedId;
-        }
-
-        var response = await _aiService.ProcessChatAsync(dto);
-        return Ok(response);
+        var result = await _aiService.ChatAsync(request);
+        return Ok(result);
     }
 
-    /// <summary>
-    /// Auto-classifies ticket subject and description into category & priority.
-    /// </summary>
     [HttpPost("classify")]
-    public async Task<IActionResult> ClassifyTicket([FromBody] AIClassifyRequestDto dto)
+    public async Task<IActionResult> Classify([FromBody] ClassifyRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(dto.Subject) && string.IsNullOrWhiteSpace(dto.Description))
-        {
-            return BadRequest(new { message = "Subject or Description must be provided." });
-        }
-
-        var result = await _aiService.ClassifyTicketAsync(dto);
+        var result = await _aiService.ClassifyAsync(request);
         return Ok(result);
     }
 
-    /// <summary>
-    /// Generates concise 2-3 sentence summary & key takeaways for a ticket thread.
-    /// </summary>
     [HttpPost("summarize")]
-    public async Task<IActionResult> Summarize([FromBody] AISummarizeRequestDto dto)
+    public async Task<IActionResult> Summarize([FromBody] SummarizeRequestDto request)
     {
-        var result = await _aiService.SummarizeConversationAsync(dto);
+        var result = await _aiService.SummarizeAsync(request);
         return Ok(result);
     }
 
-    /// <summary>
-    /// Generates an AI-suggested draft response for support agents.
-    /// </summary>
     [HttpPost("suggest-response")]
-    public async Task<IActionResult> SuggestResponse([FromBody] AISuggestionRequestDto dto)
+    public async Task<IActionResult> SuggestResponse([FromBody] SuggestReplyRequestDto request)
     {
-        var result = await _aiService.GenerateAgentSuggestionAsync(dto);
+        var result = await _aiService.SuggestReplyAsync(request);
         return Ok(result);
-    }
-
-    /// <summary>
-    /// Retrieves recent AI interaction logs for system monitoring & audit.
-    /// </summary>
-    [HttpGet("logs")]
-    public async Task<IActionResult> GetLogs([FromQuery] int limit = 50)
-    {
-        var logs = await _aiService.GetInteractionLogsAsync(limit);
-        return Ok(logs);
     }
 }
