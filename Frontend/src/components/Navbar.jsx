@@ -1,7 +1,7 @@
 import React from 'react';
-import { Search, Bell, Sparkles, Filter, RefreshCw } from 'lucide-react';
+import { Search, Bell, Sparkles, Filter, RefreshCw, User, LogIn } from 'lucide-react';
 
-export default function Navbar({ searchQuery, setSearchQuery, activeTab, onRefresh }) {
+export default function Navbar({ searchQuery, setSearchQuery, activeTab, onRefresh, currentUser, onOpenAuth }) {
   const getTabTitle = () => {
     switch (activeTab) {
       case 'tickets': return 'Support Agent Ticket Hub';
@@ -9,6 +9,7 @@ export default function Navbar({ searchQuery, setSearchQuery, activeTab, onRefre
       case 'analytics': return 'AI Performance & CSAT Analytics';
       case 'simulator': return 'Customer Live Chat Simulator';
       case 'settings': return 'AI Bot Rules & Prompt Config';
+      case 'auth': return 'Account Sign In & Sign Up';
       default: return 'Support Workspace';
     }
   };
@@ -51,6 +52,16 @@ export default function Navbar({ searchQuery, setSearchQuery, activeTab, onRefre
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full"></span>
         </button>
+
+        {!currentUser && (
+          <button
+            onClick={onOpenAuth}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-600/20 transition-all"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
     </header>
   );
