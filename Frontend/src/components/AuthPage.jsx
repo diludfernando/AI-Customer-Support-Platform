@@ -13,23 +13,22 @@ import {
   Shield, 
   Headphones, 
   Users,
-  Zap
+  KeyRound
 } from 'lucide-react';
 import { loginUser, registerUser } from '../services/authService.js';
 
-export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
+export default function AuthPage({ onAuthSuccess, initialMode = 'signin', isClerkEnabled = false }) {
   const [mode, setMode] = useState(initialMode); // 'signin' or 'signup'
   
-  // Sign In State
+  // Custom Form State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
 
-  // Sign Up State
   const [registerFullName, setRegisterFullName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState('Customer'); // 'Customer', 'Support Agent', 'Administrator'
+  const [selectedRole, setSelectedRole] = useState('Customer');
 
   // UI State
   const [showPassword, setShowPassword] = useState(false);
@@ -131,8 +130,9 @@ export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
             SupportAI <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Enterprise Customer Support & RAG Intelligence Platform
+          <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1.5">
+            <KeyRound className="w-3.5 h-3.5 text-indigo-400" />
+            Clerk & Enterprise Authentication Ready
           </p>
         </div>
 
@@ -185,7 +185,7 @@ export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
           </div>
         )}
 
-        {/* ================= SIGN IN FORM ================= */}
+        {/* Custom Sign In Form */}
         {mode === 'signin' && (
           <form onSubmit={handleSignInSubmit} className="space-y-4">
             <div>
@@ -210,7 +210,7 @@ export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
                 <label className="text-xs font-medium text-slate-300">
                   Password
                 </label>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); setErrorMsg('Password reset link has been dispatched to your email.'); }} className="text-[11px] text-indigo-400 hover:underline">
+                <a href="#forgot" onClick={(e) => { e.preventDefault(); setErrorMsg('Password reset instructions sent.'); }} className="text-[11px] text-indigo-400 hover:underline">
                   Forgot password?
                 </a>
               </div>
@@ -240,7 +240,7 @@ export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 bg-slate-950 border-slate-700 rounded text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900"
+                  className="w-4 h-4 bg-slate-950 border-slate-700 rounded text-indigo-600 focus:ring-indigo-500"
                 />
                 <span className="text-xs text-slate-400">Remember this device</span>
               </label>
@@ -296,7 +296,7 @@ export default function AuthPage({ onAuthSuccess, initialMode = 'signin' }) {
           </form>
         )}
 
-        {/* ================= SIGN UP FORM ================= */}
+        {/* Custom Sign Up Form */}
         {mode === 'signup' && (
           <form onSubmit={handleSignUpSubmit} className="space-y-4">
             <div>

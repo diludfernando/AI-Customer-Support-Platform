@@ -39,7 +39,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 });
 
-// Configure JWT Authentication
+// Configure Authentication (Supports Clerk JWT & ASP.NET Core Native JWT)
+var useClerk = builder.Configuration.GetValue<bool>("UseClerkAuth", false);
+var clerkAuthority = builder.Configuration["Clerk:Authority"];
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? "SUPER_SECRET_KEY_FOR_AI_CUSTOMER_SUPPORT_PLATFORM_123456789_EXTENDED_KEY";
 var keyBytes = Encoding.UTF8.GetBytes(secretKey);
@@ -51,16 +54,30 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    if (useClerk && !string.IsNullOrEmpty(clerkAuthority))
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"] ?? "AICustomerSupportApi",
-        ValidAudience = jwtSettings["Audience"] ?? "AICustomerSupportClient",
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
-    };
+        options.Authority = clerkAuthority;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = clerkAuthority,
+            ValidateAudience = false,
+            ValidateLifetime = true
+        };
+    }
+    else
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"] ?? "AICustomerSupportApi",
+            ValidAudience = jwtSettings["Audience"] ?? "AICustomerSupportClient",
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+        };
+    }
 });
 
 builder.Services.AddAuthorization();

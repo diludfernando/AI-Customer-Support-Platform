@@ -49,8 +49,9 @@ The main goal is to build a scalable customer support system that:
 
 ### Authentication
 
-* JWT authentication
-* Role-based authorization
+* Clerk Authentication Provider (`@clerk/clerk-react` SPA integration)
+* ASP.NET Core JWT Bearer Authentication & Clerk JWKS Authority validation
+* Role-based authorization (`Customer`, `Support Agent`, `Administrator`) mapped via Clerk user metadata
 
 ### AI
 
@@ -134,12 +135,11 @@ The application should be separated into logical modules.
 
 Responsible for:
 
-* Registration
-* Login
-* JWT generation
-* Password hashing
-* Role-based authorization
-* User session/security management
+* Registration & Login (via Clerk Provider & ASP.NET Core auth endpoints)
+* Clerk JWT Token generation & verification
+* Password hashing & OAuth identity providers (Google, GitHub, SSO)
+* Role-based authorization (`Customer`, `Support Agent`, `Administrator`) via Clerk user metadata
+* Session persistence & JWT Bearer token validation against Clerk JWKS Authority endpoint
 
 ### Ticket Management Module
 
@@ -535,6 +535,10 @@ Example environment variables:
 ```text
 DATABASE_CONNECTION_STRING=
 JWT_SECRET=
+VITE_CLERK_PUBLISHABLE_KEY=
+UseClerkAuth=
+Clerk__Authority=
+Clerk__SecretKey=
 AI_API_KEY=
 AI_MODEL=
 EMBEDDING_MODEL=
